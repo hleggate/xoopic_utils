@@ -25,7 +25,8 @@ To create an image named ubuntu-20.04_xoopic_1
 
 # Running Docker
 sudo docker rm ub20_test
-sudo docker run -it --rm --name=test1 -v /home/hleggate/HLST/projects/xoopic/docker:/home/xoopic/rundir:Z ubuntu-20.04_xoopic_1 /bin/bash
+sudo docker run -it --name=test1 -v /home/hleggate/HLST/projects/xoopic/docker:/home/xoopic/rundir:Z ubuntu-20.04_xoopic_1 /bin/bash
+Add -rm to remove the container after use
 ##sudo docker run -it --rm --name test1 --mount type=bind,source=/home/hleggate/HLST/projects/xoopic/docker/,target=/home/xoopic/rundir/,rw ubuntu-20.04_xoopic_1
 
 # Managing images and containers
