@@ -1,0 +1,992 @@
+default 
+{
+ RF discharge
+}
+///  for dt=0.25e-12
+///  1 RF cycles is 25000  timesteps
+///  2 RF cycles is 50000 timesteps
+///  4 RF cycles is 100000 timesteps
+Variables
+{
+	Ia = 900 //current amplitude
+	phi1 = PI/2 //phase on electrodes 1,3
+	phi2 = 3*PI/2 //phase on electrodes 2,4
+	dtk = 0.0078125   //interelectrode dielectric thinckness // 20 cells
+	tl  = 0.02421875  //tile lenght  // 62 cells
+	//the condition is that 6tl+7dtk = 512
+	Itk =0.00078125 //current region thickness
+	ed =10 //dielectric constant
+	rf=160E6
+	cyc = 200 // number of iteration for saving into the diagnostic files
+	res_energ =200
+	e_max =100
+
+	height = 0.025
+		
+}
+Region
+{	
+Species
+{
+        name = electrons
+        m = 9.11E-31
+        q = -1.6E-19
+        collisionModel = 1
+	 particleLimit = 2.4e+7
+}
+Species
+{
+        name = argon
+        m = 6.67e-26
+        q = 1.6E-19
+        collisionModel = 0
+        subcycle = 100
+	 particleLimit = 2.4e+7
+}
+MCC
+{
+        collisionFlag = 1
+        gas = Ar
+        pressure = 0.025
+        eSpecies = electrons
+        iSpecies = argon
+}
+Grid
+{
+	Geometry = 1    // XY co-ordinates
+	J = 512
+	x1s = 0.0
+	x1f = 0.2
+	n1 = 1.0
+	K = 160
+	x2s = 0.0
+	x2f = height
+	n2 = 1.0
+}
+
+Control
+{
+	dt = 0.25E-12
+	ElectrostaticFlag = 0
+	initPoissonSolve = 1  //  JK Lee: do Poisson solve on restart 
+	// emdamping = 0.2
+        //  nSmoothing = 5
+   //  John Verbonquer  not for E-M
+}
+Conductor  //   should be     Equipotential for EM 
+{       		// Equi:  grounded conductor in EM case.  outter conductor
+// name = chamber	//    behind top-layer dielectric, so no plasma exposure
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = 512
+// nenergybins = res_energ
+// energy_max = e_max
+
+//	Secondary      //  ***** adding secondary electrons from edges. 
+//	{
+//	  secondary = 0.25
+//	  secSpecies = electrons
+//	  iSpecies = argon
+//     }
+	
+	Segment    // across top 
+	{
+	
+	  A1 = 0
+	  B1 = 0.2
+	  A2 = height
+	  B2 = height
+	  normal = -1
+	}
+//        Segment   //  down RHS
+//        {
+//          A1 = 0.2
+//          B1 = 0.2
+//          A2 = height
+//          B2 = 0
+//         normal = -1
+//        }
+        Segment    //  across bottom 
+        {
+          A1 = 0.2
+          B1 = 0
+          A2 = 0
+          B2 = 0
+          normal = 1
+        }
+//	Segment     //   up LHS
+//	{
+//	  A1 = 0
+//	  B1 = 0
+//	  A2 = 0
+//	  B2 = height
+//	  normal = 1
+//	}
+}
+
+Equipotential  //   should be     Equipotential for EM 
+{       		// Equi:  grounded conductor in EM case.  outter conductor
+
+	Secondary      //  ***** adding secondary electrons from edges. 
+	{
+	  secondary = 0.75
+	  secSpecies = electrons
+	  iSpecies = argon
+      }
+
+      Segment      //   up RHS
+        {
+          A1 = 0.2
+          B1 = 0.2
+          A2 = 0
+          B2 = height
+          normal = -1
+        }
+	Segment    //   up LHS 
+	{
+	  A1 = 0
+	  B1 = 0
+	  A2 = 0
+	  B2 = height
+	  normal = 1
+	}
+}
+
+
+DielectricRegion     //  D1
+{
+fill = 1
+// name = IE_G_T1       //  Dielectric from Ground to tile-edge
+// EFFlag = 1			//  All under the 'capping dielectric' 
+// IdiagFlag = 1
+// nxbins = dtk*5
+// nenergybins = res_energ
+// energy_max = e_max
+        er = ed
+        A1 = 0
+        B1 = A1+dtk
+        A2 = 0.00125
+        B2 = 0.0025
+}
+DielectricRegion    //  D2  
+{
+fill = 1
+// name = IE_T1_T2
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = dtk*5
+// nenergybins = res_energ
+// energy_max = e_max
+        er = ed
+        A1 = dtk+tl
+        B1 = 2*dtk+tl
+        A2 = 0.00125
+        B2 = 0.0025
+}
+DielectricRegion     //   D3
+{
+fill = 1
+// name = IE_T2_T3
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = dtk*5
+// nenergybins = res_energ
+// energy_max = e_max
+        er = ed
+        A1 = 2*(dtk+tl)
+        B1 = 2*(dtk+tl)+dtk
+        A2 = 0.00125
+        B2 = 0.0025
+}
+
+DielectricRegion     //   D4
+
+{
+	fill = 1
+// name = IE_T3_T4
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = dtk*5
+// nenergybins = res_energ
+// energy_max = e_max
+        er = ed
+        A1 = 3*(dtk+tl)
+        B1 = 3*(dtk+tl)+dtk
+        A2 = 0.00125
+        B2 = 0.0025
+}
+
+DielectricRegion     //   D5
+{
+fill = 1
+// name = IE_T4_T5
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = dtk*5
+// nenergybins = res_energ
+// energy_max = e_max
+        er = ed
+        A1 = 4*(dtk+tl)
+        B1 = 4*(dtk+tl)+dtk
+        A2 = 0.00125
+        B2 = 0.0025
+}
+//09_11_2017 addition for six tiles
+
+DielectricRegion     //   D6
+{
+fill = 1
+// name = IE_T5_T6
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = dtk*5
+// nenergybins = res_energ
+// energy_max = e_max
+        er = ed
+        A1 = 5*(dtk+tl)
+        B1 = 5*(dtk+tl)+dtk
+        A2 = 0.00125
+        B2 = 0.0025
+}
+
+DielectricRegion     //   D7
+{
+fill = 1
+// name = IE_T6_G
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = dtk*5
+// nenergybins = res_energ
+// energy_max = e_max
+        er = ed
+        A1 = 6*(dtk+tl)
+        B1 = 6*(dtk+tl)+dtk
+        A2 = 0.00125
+        B2 = 0.0025
+}
+
+//under electrodes dielectric 
+
+DielectricRegion     //   D8
+{
+	fill = 1
+	er = ed
+	A1 = 0
+	B1 = dtk+tl/2-Itk/2
+	A2 = 0
+	B2 = 0.0009375 
+}
+DielectricRegion     //   D9
+{
+	fill = 1
+	er = ed
+	A1 = dtk+tl/2+Itk/2
+	B1 = 2*dtk+3/2*tl-Itk/2
+	A2 = 0
+	B2 = 0.0009375 
+}
+DielectricRegion     //   D10
+{
+	fill = 1
+	er = ed
+	A1 = 2*dtk+3/2*tl+Itk/2
+	B1 = 3*dtk+5/2*tl-Itk/2
+	A2 = 0
+	B2 = 0.0009375 
+}
+DielectricRegion     //   D11
+{
+	fill = 1
+        er = ed
+        A1 = 3*dtk+5/2*tl+Itk/2
+        B1 = 4*dtk+7/2*tl-Itk/2
+        A2 = 0
+        B2 = 0.0009375 
+}
+DielectricRegion     //   D12
+{
+	fill =1
+        er = ed
+        A1 = 4*dtk+7/2*tl+Itk/2
+        B1 = 5*dtk+9/2*tl-Itk/2
+        A2 = 0
+        B2 = 0.0009375 
+}
+DielectricRegion     //   D13
+{
+	fill = 1        
+	er = ed
+        A1 = 5*dtk+9/2*tl+Itk/2
+        B1 = 6*dtk+11/2*tl-Itk/2
+        A2 = 0
+        B2 = 0.0009375 
+}
+
+DielectricRegion     //   D14     from T6 current-drive to GND, under tiles 
+{
+	fill =1        
+	er = ed
+        A1 = 6*dtk+11/2*tl+Itk/2
+        B1 = 7*dtk+6*tl
+        A2 = 0
+        B2 = 0.0009375 
+}
+
+
+
+DielectricRegion     //   D16
+{
+fill = 1
+name = ground_electrode
+EFFlag = 1
+IdiagFlag = 1
+nxbins = 2500
+nenergybins = res_energ
+energy_max = e_max
+        er = ed
+        A1 = 0
+        B1 = 0.2
+        A2 = height - (0.02 - 0.0196875)
+        B2 = height
+}
+
+DielectricRegion     //   D17   high-k capacitor for I-transfer
+{
+fill = 1
+name = Tile1_Coupling-Capacitor
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = 2500
+// nenergybins = res_energ
+// energy_max = e_max
+        er = 1000*ed
+        A1 = dtk+tl/2-Itk/2
+        B1 = dtk+tl/2+Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+
+DielectricRegion     //   D18   high-k capacitor for I-transfer
+{
+fill = 1
+name = Tile2_Coupling-Capacitor
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = 2500
+// nenergybins = res_energ
+// energy_max = e_max
+        er = 1000*ed
+        A1 = 2*dtk+3*tl/2-Itk/2
+        B1 = 2*dtk+3*tl/2+Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+
+DielectricRegion     //   D19   high-k capacitor for I-transfer
+{
+fill = 1
+name = Tile3_Coupling-Capacitor
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = 2500
+// nenergybins = res_energ
+// energy_max = e_max
+        er = 1000*ed
+        A1 = 3*dtk+5*tl/2-Itk/2
+        B1 = 3*dtk+5*tl/2+Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+
+DielectricRegion     //   D20   high-k capacitor for I-transfer
+{
+fill = 1
+name = Tile4_Coupling-Capacitor
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = 2500
+// nenergybins = res_energ
+// energy_max = e_max
+        er = 1000*ed
+        A1 = 4*dtk+7/2*tl-Itk/2
+        B1 = 4*dtk+7/2*tl+Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+
+DielectricRegion     //   D21   high-k capacitor for I-transfer
+{
+fill = 1
+name = Tile5_Coupling-Capacitor
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = 2500
+// nenergybins = res_energ
+// energy_max = e_max
+        er = 1000*ed
+        A1 = 5*dtk+9/2*tl-Itk/2
+        B1 = 5*dtk+9/2*tl+Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+
+DielectricRegion     //   D22   high-k capacitor for I-transfer
+{
+fill = 1
+name = Tile6_Coupling-Capacitor
+// EFFlag = 1
+// IdiagFlag = 1
+// nxbins = 2500
+// nenergybins = res_energ
+// energy_max = e_max
+        er = 1000*ed
+        A1 = 6*dtk+11/2*tl-Itk/2
+        B1 = 6*dtk+11/2*tl+Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+
+//under electrodes dielectric 
+
+DielectricRegion     //   D23
+{
+	fill = 1
+	er = ed
+	A1 = 0
+	B1 = dtk+tl/2-Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+DielectricRegion     //   D24
+{
+	fill = 1
+	er = ed
+	A1 = dtk+tl/2+Itk/2
+	B1 = 2*dtk+3/2*tl-Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+DielectricRegion     //   D25
+{
+	fill = 1
+	er = ed
+	A1 = 2*dtk+3/2*tl+Itk/2
+	B1 = 3*dtk+5/2*tl-Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+DielectricRegion     //   D26
+{
+	fill = 1
+        er = ed
+        A1 = 3*dtk+5/2*tl+Itk/2
+        B1 = 4*dtk+7/2*tl-Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+DielectricRegion     //   D27
+{
+	fill =1
+        er = ed
+        A1 = 4*dtk+7/2*tl+Itk/2
+        B1 = 5*dtk+9/2*tl-Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+DielectricRegion     //   D28
+{
+	fill = 1        
+	er = ed
+        A1 = 5*dtk+9/2*tl+Itk/2
+        B1 = 6*dtk+11/2*tl-Itk/2
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+
+DielectricRegion     //   D29     from T6 current-drive to GND, under tiles 
+{
+	fill =1        
+	er = ed
+        A1 = 6*dtk+11/2*tl+Itk/2
+        B1 = 7*dtk+6*tl
+        A2 = 0.0009375
+        B2 = 0.00125
+}
+
+
+
+Conductor   //Tile 1
+{
+fill = 1
+name = Tile_1
+EFFlag = 1
+IdiagFlag = 1
+nxbins = tl*5
+nenergybins = res_energ
+energy_max = e_max
+
+	
+	Segment		//	Top-side
+	{
+	
+	  A1 = dtk
+	  A2 = 0.0025
+	  B1 = dtk+tl
+	  B2 = 0.0025
+	  normal = 1
+	}
+	Segment		//	Down RHS
+	{
+	  A1 = dtk+tl
+	  A2 = 0.0025
+	  B1 = dtk+tl
+	  B2 = 0.00125
+	  normal = 1
+	}
+	Segment		//	Bottom-side
+	{
+          A1 = dtk+tl
+          A2 = 0.00125
+          B1 = dtk
+          B2 = 0.00125
+          normal = -1
+	}
+       
+	Segment		//	Up LHS
+	{
+	  A1 = dtk
+	  A2 = 0.00125
+	  B1 = dtk
+	  B2 = 0.0025
+	  normal = -1
+	}
+
+ Secondary
+        {
+            secondary = .1
+            secSpecies = electrons
+            iSpecies = argon
+        }
+}
+
+Conductor   //Tile 2
+{
+fill = 1
+name = Tile_2
+EFFlag = 1
+IdiagFlag = 1
+nxbins = tl*5
+nenergybins = res_energ
+energy_max = e_max
+	
+	Segment
+        {
+          A1 = 2*dtk+tl
+          A2 = 0.0025
+          B1 = 2*(dtk+tl)
+          B2 = 0.0025
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 2*(dtk+tl)
+          A2 = 0.0025
+          B1 = 2*(dtk+tl)
+          B2 = 0.00125
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 2*(dtk+tl)
+          A2 = 0.00125
+          B1 = 2*dtk+tl
+          B2 = 0.00125
+          normal = -1
+        }
+	Segment
+	{
+	  A1 = 2*dtk+tl
+	  B1 = 2*dtk+tl
+	  A2 = 0.00125
+	  B2 = 0.0025
+	  normal = -1
+	}
+        Secondary
+        {
+           secondary = 0.1
+            secSpecies = electrons
+            iSpecies = argon
+        }
+}
+
+Conductor   //Tile 3
+{
+fill = 1
+name = Tile_3
+EFFlag = 1
+IdiagFlag = 1
+nxbins = tl*5
+nenergybins = res_energ
+energy_max = e_max
+	
+	Segment
+        {
+          A1 = 2*(dtk+tl)+dtk
+          A2 = 0.0025
+          B1 = 3*(dtk+tl)
+          B2 = 0.0025
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 3*(dtk+tl)
+          A2 = 0.0025
+          B1 = 3*(dtk+tl)
+          B2 = 0.00125
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 3*(dtk+tl)
+          A2 = 0.00125
+          B1 = 3*dtk+2*tl
+          B2 = 0.00125
+          normal = -1
+        }
+	Segment
+	{
+	  A1 = 2*(dtk+tl)+dtk
+	  B1 = 2*(dtk+tl)+dtk
+	  A2 = 0.00125
+	  B2 = 0.0025
+	  normal = -1
+	}
+        Secondary
+       {
+           secondary = 0.1
+           secSpecies = electrons
+            iSpecies = argon
+        }
+}
+
+Conductor   //Tile 4
+{
+fill = 1
+name = Tile_4
+EFFlag = 1
+IdiagFlag = 1
+nxbins = tl*5
+nenergybins = res_energ
+energy_max = e_max
+	
+	Segment
+        {
+          A1 = 3*(dtk+tl)+dtk
+          A2 = 0.0025
+          B1 = 4*(dtk+tl)
+          B2 = 0.0025
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 4*(dtk+tl)
+          A2 = 0.0025
+          B1 = 4*(dtk+tl)
+          B2 = 0.00125
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 4*(dtk+tl)
+          A2 = 0.00125
+          B1 = 4*dtk+3*tl
+          B2 = 0.00125
+          normal = -1
+        }
+	Segment
+	{
+	  A1 = 3*(dtk+tl)+dtk
+	  B1 = 3*(dtk+tl)+dtk
+	  A2 = 0.00125
+	  B2 = 0.0025
+	  normal = -1
+	}
+        Secondary
+        {
+            secondary = 0.1
+            secSpecies = electrons
+            iSpecies = argon
+        }
+}
+Conductor   //Tile 5
+{
+fill = 1
+name = Tile_5
+EFFlag = 1
+IdiagFlag = 1
+nxbins = tl*5
+nenergybins = res_energ
+energy_max = e_max
+	
+	Segment
+        {
+          A1 = 4*(dtk+tl)+dtk
+          A2 = 0.0025
+          B1 = 5*(dtk+tl)
+          B2 = 0.0025
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 5*(dtk+tl)
+          A2 = 0.0025
+          B1 = 5*(dtk+tl)
+          B2 = 0.00125
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 5*(dtk+tl)
+          A2 = 0.00125
+          B1 = 5*dtk+4*tl
+          B2 = 0.00125
+          normal = -1
+        }
+	Segment
+	{
+	  A1 = 4*(dtk+tl)+dtk
+	  B1 = 4*(dtk+tl)+dtk
+	  A2 = 0.00125
+	  B2 = 0.0025
+	  normal = -1
+	}
+        Secondary
+        {
+            secondary = 0.1
+            secSpecies = electrons
+            iSpecies = argon
+        }
+}
+
+Conductor   //Tile 6
+{
+fill = 1
+name = Tile_6
+EFFlag = 1
+IdiagFlag = 1
+nxbins = tl*5
+nenergybins = res_energ
+energy_max = e_max
+	
+	Segment
+        {
+          A1 = 5*(dtk+tl)+dtk
+          A2 = 0.0025
+          B1 = 6*(dtk+tl)
+          B2 = 0.0025
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 6*(dtk+tl)
+          A2 = 0.0025
+          B1 = 6*(dtk+tl)
+          B2 = 0.00125
+          normal = 1
+        }
+        Segment
+        {
+          A1 = 6*(dtk+tl)
+          A2 = 0.00125
+          B1 = 6*dtk+5*tl
+          B2 = 0.00125
+          normal = -1
+        }
+	Segment
+	{
+	  A1 = 5*(dtk+tl)+dtk
+	  B1 = 5*(dtk+tl)+dtk
+	  A2 = 0.00125
+	  B2 = 0.0025
+	  normal = -1
+	}
+        Secondary
+        {
+            secondary = 0.1
+            secSpecies = electrons
+            iSpecies = argon
+        }
+}
+
+
+
+CurrentRegion  //T1   now 75% as tall, and 25% high-k dielectric
+{
+	Segment
+	{
+        A1 = dtk+tl/2-Itk/2
+        B1 = dtk+tl/2+Itk/2
+	A2 = 0
+	B2 = 0.0009375     //  was  0.00125
+	}
+	Current = Ia
+	direction = 2
+	A = 0.05
+	frequency = rf
+	C = 0
+	phase = phi1
+	//tdelay=5e-13
+	//trise=5e-13
+	a0 = 0
+	a1 = 1
+}
+
+CurrentRegion  //T2
+{
+ 	Segment
+	{
+        A1 = 2*dtk+3*tl/2-Itk/2
+        B1 = 2*dtk+3*tl/2+Itk/2
+        A2 = 0
+        B2 = 0.0009375      //  0.00125
+	}
+	Current = Ia
+        direction = 2
+        A = 1
+        frequency = rf
+        C = 0
+        phase = phi2
+	//tdelay=5e-13
+	//trise=5e-13
+	a0 = 0
+	a1 = 1
+}
+
+
+CurrentRegion  //T3
+{
+ 	Segment
+	{
+        A1 = 3*dtk+5*tl/2-Itk/2
+        B1 = 3*dtk+5*tl/2+Itk/2
+        A2 = 0
+        B2 = 0.0009375
+	}
+	Current = Ia
+	direction = 2
+	A = 1
+	frequency = rf
+	C = 0
+	phase = phi1
+	//tdelay=5e-13
+	//trise=5e-13
+	a0 = 0
+	a1 = 1
+	
+}
+
+
+CurrentRegion  //T4
+{
+ 	Segment
+	{
+        A1 = 4*dtk+7/2*tl-Itk/2
+        B1 = 4*dtk+7/2*tl+Itk/2
+        A2 = 0
+        B2 = 0.0009375
+	}
+	Current = Ia
+	direction = 2
+	A = 1
+	frequency = rf
+	C = 0
+	phase = phi2
+	//tdelay=5e-13
+	//trise=5e-13
+	a0 = 0
+	a1 = 1
+}
+
+
+CurrentRegion  //T5
+{
+ 	Segment
+	{
+        A1 = 5*dtk+9/2*tl-Itk/2
+        B1 = 5*dtk+9/2*tl+Itk/2
+        A2 = 0
+        B2 = 0.0009375
+	}
+	Current = Ia
+	direction = 2
+	A = 1
+	frequency = rf
+	C = 0
+	phase = phi1
+	//tdelay=5e-13
+	//trise=5e-13
+	a0 = 0
+	a1 = 1
+}
+
+
+CurrentRegion  //T6
+{
+ 	Segment
+	{
+        A1 = 6*dtk+11/2*tl-Itk/2
+        B1 = 6*dtk+11/2*tl+Itk/2
+        A2 = 0
+        B2 = 0.0009375
+	}
+	Current = Ia
+	direction = 2
+	A = 0.05
+	frequency = rf
+	C = 0
+	phase = phi2
+	//tdelay=5e-13
+	//trise=5e-13
+	a0 = 0
+	a1 = 1
+}
+
+Load
+{
+	x1MinMKS = 0.0001
+	x1MaxMKS = 0.1999
+	x2MinMKS = 0.003675
+	x2MaxMKS = height - (0.02 - 0.019125)
+	speciesName = electrons
+	density = 5500000000000000.0
+	np2c = 3700000.0
+	temperature = 2.93e5
+}
+Load
+{
+	x1MinMKS = 0.00
+	x1MaxMKS = 0.2
+	x2MinMKS = 0.0028125
+	x2MaxMKS = height - (0.02 - 0.0196875)
+	speciesName = argon
+	density = 5500000000000000.0
+	np2c = 3700000.0
+	temperature = 4.9e3
+}
+
+
+Diagnostic
+{
+	VarName = predef Region 0: total density (t)
+	directory = data
+	file = 210531_160MHz_00.dat
+	open = 0
+	append = 1
+	n_start=199
+	n_step= 200
+
+	
+	
+}
+								
+}
