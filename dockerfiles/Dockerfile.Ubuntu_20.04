@@ -1,0 +1,33 @@
+# Basic Docker setup for xoopic using ubuntu 20.04
+
+FROM ubuntu:20.04
+RUN apt-get update -y
+RUN apt-get upgrade -y
+RUN apt-get install -y curl
+RUN apt-get install -y libx11-dev
+RUN apt-get install -y x11-apps
+RUN apt-get install -y gcc g++ gfortran
+RUN apt-get install -y emacs
+RUN apt-get install -y tcl8.6-dev
+RUN apt-get install -y tk8.6-dev
+RUN apt-get install -y libxpm4
+RUN apt-get install -y libxpm-dev
+#RUN apt-get install -y openmpi-bin 
+#RUN apt-get install -y libopenmpi-dev
+RUN apt-get install -y git
+
+# Clone xoopic and build
+# First xgrafix
+RUN mkdir /home/xoopic
+WORKDIR /home/xoopic/
+RUN git clone https://github.com/rinku-mishra/xoopic.git \
+    && cd xoopic/xgrafix_installer_file && tar -xvf xgrafix.tar.gz
+WORKDIR /home/xoopic/xoopic/xgrafix_installer_file/xgrafix
+RUN ./configure --with-X11_LIBDIR=/usr/lib/x86_64-linux-gnu/ --with-xpm=/usr/lib/x86_64-linux-gnu/ --with-tclconfig=/usr/lib/tcl8.6/ --with-tkconfig=/usr/lib/tk8.6/ --with-tclhdir=/usr/include/tcl8.6/
+RUN make install
+
+# Then xoopic itself
+WORKDIR /home/xoopic/xoopic/
+RUN ./configure --with-X11_LIBDIR=/usr/lib/x86_64-linux-gnu/ --with-xpm=/usr/lib/x86_64-linux-gnu/ --with-tclconfig=/usr/lib/tcl8.6/ --with-tkconfig=/usr/lib/tk8.6/ --with-tclhdir=/usr/include/tcl8.6/
+RUN make
+
