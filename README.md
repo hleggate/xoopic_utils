@@ -32,9 +32,14 @@ sudo docker run -it --rm --name=test1 -v /home/hleggate/HLST/projects/xoopic/doc
 # Images
 sudo docker images
 sudo docker image rm <name>
+
 # Containers
 sudo docker ps -a
 sudo docker rm <name>
 
+# Drastic!
+sudo docker system prune -a
+
 # Running Xoopic
+You will need the input file in the directory you are running from. A sample can be found in test_input
 
