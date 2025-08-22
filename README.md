@@ -41,7 +41,7 @@ Will create an interactive container based on the image my_image. The first path
 You can also start an existing container
 ```
 > sudo docker -ai start my_container
-
+```
 ## Managing images and containers
 Show all local images
 ```
