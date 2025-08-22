@@ -1,57 +1,67 @@
-Useful scripts and utilities to use with Xoopic
+# Xoopic utils
+### Useful scripts and utilities to use with Xoopic
 
-You will need docker installed to use these scripts.
+You will need docker installed to use these scripts. Instructions for Ubuntu and Fedora below. Docker builds images containing all the packages you request. These images are then used to create containers that run based on the image. Dockerfiles are present in the dockerfiles directory.
 
-# For Ubuntu:
+## For Ubuntu:
+```sh
 > sudo apt install apt-transport-https ca-certificates curl software-properties-common
-
 > curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-
 > sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-
 > apt-cache policy docker-ce
-
 > sudo apt install docker-ce
-
 > sudo systemctl status docker
-
-# For Fedora
+```
+## For Fedora
+```sh
 > sudo dnf install docker-cli containerd
-
 > sudo systemctl enable --now docker
+```
 
-# Test
+## Test
+```sh
 > sudo docker run hello-world
+```
 
-# Build the images
+## Build the images
 In the directory containing the DockerFile you want to use
+```sh
+> sudo docker build -t <my_image> .
+```
+To create an image named my_image
 
-> sudo docker build -t ubuntu-20.04_xoopic_1 .
+## Running Containers
+```sh
+> sudo docker run -it --name=my_container -v /home/hleggate/xoopic/inputs:/home/xoopic/rundir:Z my_image /bin/bash 
+```
+Will create an interactive container based on the image my_image. The first path is the location in your file system containing the input files, the docker container will be able to see this directory and write to  it. Add -rm to remove the container after use, otherwise you will need to either delete the old container or choose a new name for future containers.
+```sh
+> sudo docker rm my_container
+```
+You can also start an existing container
+```
+> sudo docker -ai start my_container
 
-To create an image named ubuntu-20.04_xoopic_1
-
-# Running Docker
-> sudo docker rm ub20_test
-
-> sudo docker run -it --name=test1 -v /home/hleggate/HLST/projects/xoopic/docker:/home/xoopic/rundir:Z ubuntu-20.04_xoopic_1 /bin/bash
-Add -rm to remove the container after use
-
-[//]: <> ##sudo docker run -it --rm --name test1 --mount type=bind,source=/home/hleggate/HLST/projects/xoopic/docker/,target=/home/xoopic/rundir/,rw ubuntu-20.04_xoopic_1
-
-# Managing images and containers
-# Images
+## Managing images and containers
+Show all local images
+```
 > sudo docker images
+```
+Remove an image
+```
+> sudo docker image rmi <my_image>
+```
+Show all containers and remove my_container
+```
+> sudo docker ps -a
+> sudo docker rm <my_container>
+```
+Remove all unused images and containers
+```
+> sudo docker system prune
+```
+Adding -a will remove *ALL* dockers and containers
 
-> sudo docker image rm <name>
-
-# Containers
->sudo docker ps -a
-
->sudo docker rm <name>
-
-# Drastic!
->sudo docker system prune -a
-
-# Running Xoopic
-You will need the input file in the directory you are running from. A sample can be found in test_input
+# Running Xoopic in a container
+You will need the input file in the directory you are running from. A sample can be found in test_input. Just launch the container and run xoopic from the command line. 
 
