@@ -30,18 +30,6 @@ In the directory containing the DockerFile you want to use
 ```
 To create an image named my_image
 
-## Running Containers
-```sh
-> sudo docker run -it --name=my_container -v /home/hleggate/xoopic/inputs:/home/xoopic/rundir:Z my_image /bin/bash 
-```
-Will create an interactive container based on the image my_image. The first path is the location in your file system containing the input files, the docker container will be able to see this directory and write to  it. Add -rm to remove the container after use, otherwise you will need to either delete the old container or choose a new name for future containers.
-```sh
-> sudo docker rm my_container
-```
-You can also start an existing container
-```
-> sudo docker -ai start my_container
-```
 ## Managing images and containers
 Show all local images
 ```
@@ -62,6 +50,19 @@ Remove all unused images and containers
 ```
 Adding -a will remove *ALL* dockers and containers
 
-# Running Xoopic in a container
+## Running Containers
+```sh
+> sudo docker run -it --name=my_container -v /home/hleggate/xoopic/inputs:/home/xoopic/rundir:Z my_image /bin/bash 
+```
+Will create an interactive container based on the image my_image. The first path is the location in your file system containing the input files, the docker container will be able to see this directory and write to  it. Add -rm to remove the container after use, otherwise you will need to either delete the old container or choose a new name for future containers.
+```sh
+> sudo docker rm my_container
+```
+You can also start an existing container
+```
+> sudo docker -ai start my_container
+```
+
+## Running Xoopic in a container
 You will need the input file in the directory you are running from. A sample can be found in test_input. Just launch the container and run xoopic from the command line. 
 
