@@ -66,3 +66,9 @@ You can also start an existing container
 ## Running Xoopic in a container
 You will need the input file in the directory you are running from. A sample can be found in test_input. Just launch the container and run xoopic from the command line. 
 
+## Existing Dockerfiles
+At present there are 3 dockerfiles,
+
+- [Dockerfile.Ubuntu_20.04] - serial unoptimised ubuntu 20.04
+- [Dockerfile.Ubuntu_20.04_opt] - serial optimised ubuntu 20.04
+- [Dockerfile.Ubuntu_20.04_mpiopt] - mpi optimised ubuntu 20.04
