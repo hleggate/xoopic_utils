@@ -1,0 +1,498 @@
+default
+{
+ RF discharge
+}
+Variables
+{
+	// Ia = 100        //current amplitude   
+       //  note that currents will be in-phase 
+	Va = 200	  // voltage amplitude for ES case
+	phi1 = PI/2        // same phase on bottom electrodes V=cos(wt+phi1) 
+	phi2 = 3*PI/2       // phase on ... top electrodes  
+	step_height = 0.002   // ATM system step height 
+	plasma_gap = 0.002  // height of plasma (in m)
+	                  //  2mm plasma+ 2x 2mm step + 1mm electrodes and dielectric 
+	ed = 10          //dielectric constant
+	rf=160E6
+	cyc = 10000       // number of iteration for saving into the diagnostic files
+	e_max =20         //  ATM so low E,  just how low still unclear ... 
+	res_energ =20     //  resolution, gives number of bins.
+}
+Region       //  this is the whole system.  closes at EOF. 
+{	
+Species
+{
+        name = electrons
+        m = 9.11E-31
+        q = -1.6E-19
+        collisionModel = 1
+	particleLimit = 0.6e+6
+}
+Species
+{
+        name = neon 
+        m = 6.67e-27   //  using mass of Helium   (argon=40amu=6.67e-26)    
+        q = 1.6E-19
+        collisionModel = 0
+        subcycle = 20    // trying to get rid of e-waves coming off tiles 
+	particleLimit = 0.6e+6
+}
+MCC
+{
+        collisionFlag = 1
+        gas = Ne 
+        pressure = 760.0            // in Torr
+        eSpecies = electrons
+        iSpecies = neon 
+}
+Grid
+{
+	Geometry = 1    // XY co-ordinates
+	J = 256	  //   4 cells per mm, now boundaries on grid-cells
+	x1s = 0.0
+	x1f = 0.025
+	n1 = 1.0
+	K = 512		//  50 cells per mm, now boundaries on grid-cells
+	x2s = 0.000               //  note coupling capacitor is 0.02mm
+	x2f = 0.001+plasma_gap+2*step_height
+	n2 = 1.0
+}
+
+Control
+{
+	//  dt = 10.0E-15    // for EM-calc   ( <= smallest-grid-cell-length / c )
+	//  ElectrostaticFlag = 0
+	dt = 5.0e-12         // for ES-calc   ( <= 1/5 * smallest-grid-cell-length / v_e-fastest )
+	ElectrostaticFlag = 1 
+	initPoissonSolve = 1  //  JK Lee: do Poisson solve on restart 
+	//  emdamping = 0.3
+	nSmoothing = 5        //  John Verbonquer  not for E-M
+}
+Equipotential  //   grounded boundary for EM case outter conductor
+{     
+name = chamber
+EFFlag = 0
+IdiagFlag = 0     // no plasma contact so no diagnostics 
+nxbins = 128/8
+nenergybins = res_energ
+energy_max = e_max
+A = 0
+C = 0	
+	Segment     // top 
+	{
+	  A1 = 0
+	  B1 = 0.025
+	  A2 = 0.001+plasma_gap+2*step_height
+	  B2 = 0.001+plasma_gap+2*step_height
+	  normal = -1
+	}
+        Segment    // RHS
+        {
+          A1 = 0.025
+          B1 = 0.025
+          A2 = 0.001+plasma_gap+2*step_height
+          B2 = 0.000
+          normal = -1
+        }
+        Segment
+        {
+          A1 = 0.025
+          B1 = 0
+          A2 = 0.000
+          B2 = 0.000
+          normal = 1
+        }
+	Segment
+	{
+	  A1 = 0
+	  B1 = 0
+	  A2 = 0.000
+	  B2 = 0.001+plasma_gap+2*step_height	
+	  normal = 1
+	}
+//	Secondary
+//	{
+//	  secondary = 0.05
+//	  secSpecies = electrons
+//	  iSpecies = neon 
+//      }
+}
+
+
+DielectricRegion     //  D1  Left of bottom current region
+{
+fill = 1
+name = IE_G_T1
+EFFlag = 0          // ES so no poynting flux ... 
+IdiagFlag = 0   // no plasma exposure
+// nxbins = 8
+// nenergybins = res_energ
+// energy_max = e_max
+        er = ed
+        A1 = 0
+        B1 = 0.012
+        A2 = 0.000
+        B2 = 0.0003
+}
+DielectricRegion    //  D2  Right of bottom current region
+{
+fill = 1
+name = IE_T1_G
+EFFlag = 0
+IdiagFlag = 0    // no plasma exposure
+nxbins = 8
+nenergybins = res_energ
+energy_max = e_max
+        er = ed/10
+        A1 = 0.013
+        B1 = 0.025
+        A2 = 0.000
+        B2 = 0.0003
+}
+DielectricRegion     //   D3   Left of top current region
+{
+fill = 1
+name = IE_G_T2
+EFFlag = 0
+IdiagFlag = 0 	// no plasma exposure
+nxbins = 8
+nenergybins = res_energ
+energy_max = e_max
+        er = ed
+        A1 = 0.
+        B1 = 0.012 
+        A2 = 0.0007+plasma_gap+2*step_height
+        B2 = 0.001+plasma_gap+2*step_height
+}
+
+DielectricRegion     //   D4   Right of top current region
+{
+	fill = 1
+name = IE_T2_G
+EFFlag = 0
+IdiagFlag = 0	// no plasma exposure
+nxbins = 8
+nenergybins = res_energ
+energy_max = e_max
+        er = ed
+        A1 = 0.013
+        B1 = 0.025
+        A2 = 0.0007+plasma_gap+2*step_height
+        B2 = 0.001+plasma_gap+2*step_height
+}
+
+//   *** trial:  with these there is no place for net-charge loss by the plasma volume,
+//   ***         so w/o these then plasma can find its own solution for net +! and -Q
+//DielectricRegion     //   D5   left of plasma and both-electrodes 
+//{
+//	fill = 1
+//name = IE_Left_Boundary
+//EFFlag = 0
+//IdiagFlag = 1
+//nxbins = 16          // 16 locations in y-hat direction (?)
+//nenergybins = res_energ
+//energy_max = e_max
+//        er = 1              // low k outter dielectric
+//        A1 = 0.0
+//        B1 = 0.0025
+//        A2 = 0.0003
+//        B2 = 0.0007+plasma_gap+2*step_height
+//}
+//
+//DielectricRegion     //   D6   Right of plasma and both-electrodes
+//{
+//	fill = 1
+//name = IE_Right_Boundary
+//EFFlag = 0
+//IdiagFlag = 1
+//nxbins = 16 
+//nenergybins = res_energ
+//energy_max = e_max
+//        er = 1              // low k outter dielectric
+//        A1 = 0.0225
+//        B1 = 0.025
+//        A2 = 0.0003
+//        B2 = 0.0007+plasma_gap+2*step_height
+//}
+
+
+DielectricRegion     //   D8   Isolation for backside of lower tile
+{
+	fill = 1
+        EFFlag = 0
+        er = ed               //  standard dielectric
+        A1 = 0.012
+        B1 = 0.013
+        A2 = 0.000
+        B2 = 0.0003
+}
+
+DielectricRegion     //   D9   Isolation for topside of upper tile
+{
+	fill = 1
+        EFFlag = 0
+        er = ed                // standard dielectric
+        A1 = 0.012
+        B1 = 0.013
+        A2 = plasma_gap+0.0007+2*step_height
+        B2 = plasma_gap+0.001+2*step_height
+}
+
+Equipotential   //Tile 1    Bottom  0.2mm high, 2cm wide, top at 0.05-cm 
+{                         // starting left-side of Top-hat, going clockwise
+fill = 1
+name = Tile_1
+EFFlag = 0
+IdiagFlag = 1  //  start with segment you want collections stats for
+nxbins = 64    //  tl*1000 to get 1 bin per mm 
+nenergybins = res_energ
+energy_max = e_max
+     C = 0 
+     A = Va
+     frequency = rf
+     phase = phi1
+	tdelay = 0.5*1/rf  
+	trise = 6.0*1/rf
+     a1 = 1
+     a0 = 0 
+
+	Segment
+	{                      //  6mm dx top of step 
+	  A1 = 0.0095
+	  A2 = 0.0005+step_height
+	  B1 = 0.0155
+	  B2 = 0.0005+step_height
+	  normal = 1
+	}
+	Segment
+	{                      //  0mm dx,  -step_height dy 
+	  A1 = 0.0155
+	  A2 = 0.0005+step_height
+	  B1 = 0.0155
+	  B2 = 0.0005
+	  normal = 1    // 
+	}
+	Segment
+	{                      //  7mm right-side outside plasma 
+	  A1 = 0.0155
+	  A2 = 0.0005
+	  B1 = 0.0225
+	  B2 = 0.0005
+	  normal = 1
+	}
+	Segment     //  right side, top to bottom 
+	{
+	  A1 = 0.0225
+	  A2 = 0.0005
+	  B1 = 0.0225
+	  B2 = 0.0003
+	  normal = 1
+	}
+	Segment     //  bottom, right to left 
+	{
+          A1 = 0.0225
+          A2 = 0.0003
+          B1 = 0.0025
+          B2 = 0.0003
+          normal = -1
+	}
+	Segment     //  left side, bottom to top 
+	{
+	  A1 = 0.0025
+	  A2 = 0.0003
+	  B1 = 0.0025
+	  B2 = 0.0005
+	  normal = -1
+	}
+	Segment    //   bottom tile, top-side, from left to right
+	{                      //  5mm outside
+	  A1 = 0.0025
+	  A2 = 0.0005
+	  B1 = 0.0095
+	  B2 = 0.0005
+	  normal = 1
+	}
+	Segment
+	{                      //  0mm dx, step_height dy 
+	  A1 = 0.0095
+	  A2 = 0.0005
+	  B1 = 0.0095
+	  B2 = 0.0005+step_height
+	  normal = -1    // 
+	}
+ Secondary
+        {
+            secondary = .5
+            secSpecies = electrons
+            iSpecies = neon 
+        }
+}
+
+Equipotential   //Tile 2       //   Top tile CW from BR point. Bottom at 0.5mm+plasma_gap+2*step_height 
+{                           //  now CW from BR corner of top-hat  !! 
+fill = 1
+name = Tile_2
+EFFlag = 0              // data accumulator for Poynting flux through boundary 
+IdiagFlag = 1              //          particle current 
+nxbins = 64
+nenergybins = res_energ
+energy_max = e_max
+     C = 0 
+     A = Va
+     frequency = rf
+     phase = phi2
+	tdelay = 0.5*1/rf
+	trise = 6.0*1/rf
+     a1 = 1
+     a0 = 0 
+        Segment                         //   plasma 'top-hat' 
+        {
+          A1 = 0.0155
+          A2 = 0.0005+plasma_gap+step_height
+          B1 = 0.0095
+          B2 = 0.0005+plasma_gap+step_height
+          normal = -1
+        }
+        Segment                         //  LHS slope, dx 0mm, dy +1mm
+        {
+          A1 = 0.0095
+          A2 = 0.0005+plasma_gap+step_height
+          B1 = 0.0095
+          B2 = 0.0005+plasma_gap+2*step_height
+          normal = -1    // *** trying +1 as 'filled region' is above line, ala tri-dielectric
+        }         //  nope, that caused seg-fault, so back to -1 !! also fault ... hmmm. 
+        Segment                          //  LHS flat, 1mm recessed 
+        {
+          A1 = 0.0095
+          A2 = 0.0005+plasma_gap+2*step_height
+          B1 = 0.0025
+          B2 = 0.0005+plasma_gap+2*step_height
+          normal = -1
+        }
+	Segment                         // *** up the left hand side 
+	{
+	  A1 = 0.0025
+	  A2 = 0.0005+plasma_gap+2*step_height
+	  B1 = 0.0025
+	  B2 = 0.0007+plasma_gap+2*step_height
+	  normal = -1
+	}
+	Segment      // across the top
+        {
+          A1 = 0.0025
+          A2 = 0.0007+plasma_gap+2*step_height
+          B1 = 0.0225
+          B2 = 0.0007+plasma_gap+2*step_height
+          normal = 1
+        }
+        Segment      //  down RHS of tile
+        {
+          A1 = 0.0225
+          A2 = 0.0007+plasma_gap+2*step_height
+          B1 = 0.0225
+          B2 = 0.0005+plasma_gap+2*step_height
+          normal = 1
+        }
+        Segment                      // RHS flat 5mm wide, 1mm recessed
+        {
+          A1 = 0.0225
+          A2 = 0.0005+plasma_gap+2*step_height
+          B1 = 0.0155
+          B2 = 0.0005+plasma_gap+2*step_height
+          normal = -1
+        }
+        Segment                       //  RHS slope, dx 0mm, dy -1mm 
+        {
+          A1 = 0.0155
+          A2 = 0.0005+plasma_gap+2*step_height
+          B1 = 0.0155
+          B2 = 0.0005+plasma_gap+step_height
+          normal = 1
+        }
+       Secondary
+       {
+          secondary = 0.5
+           secSpecies = electrons
+           iSpecies = neon 
+       }
+}
+
+//    ******  IFF EM then remove 1mm wide dielectrics from 12-13mm and use these: 
+// CurrentRegion  //T1          //  Bottom electrode 
+// {
+// 	Segment               // 1mm wide, 0.3mm high
+// 	{
+//         A1 = 0.012
+//         B1 = 0.013
+// 	 A2 = 0.000
+// 	 B2 = 0.00029
+// 	}
+// 	Current = Ia
+// 	direction = 2
+// 	A = 100	
+//   
+// 	frequency = rf
+// 	C = 0
+// 	phase = phi1
+// 	tdelay= 0.5*6.25e-9
+// 	trise=  2*6.25e-9
+// 	a0 = 0
+// 	a1 = 1
+// }
+// CurrentRegion  //T2            //  Top electrode 
+// {
+//  	Segment                 //  1mm wide, 0.3mm high
+// 	{
+//         A1 = 0.012
+//         B1 = 0.013
+//         A2 = 0.00071+plasma_gap
+//         B2 = 0.0010+plasma_gap 
+// 	}
+// 	Current = Ia
+//         direction = 2
+//         A = 100
+//         frequency = rf
+//         C = 0
+//         phase = phi1
+// 	tdelay= 0.5*6.25e-9
+// 	trise= 2*6.25e-9
+// 	a0 = 0
+// 	a1 = 1
+// }
+
+Load                       //    with small e-sheath
+{
+	x1MinMKS = 0.009515         
+	x1MaxMKS = 0.015485        // 22.5mm-0.33mm 
+	x2MinMKS = 0.0005+    step_height       +0.000035       //  slightly bigger sheath at electrodes
+	x2MaxMKS = 0.0005+(plasma_gap+step_height) -0.000035
+	speciesName = electrons
+	density = 20.5e15
+	np2c = 1.2e5            // smaller x-cells by 3.3, y-cells by 2, 
+	temperature = 1.0e5     //    so increase np2c from 2.2 -> 
+}
+Load
+{
+	x1MinMKS = 0.009505       // very small sheath on LHS and RHS 
+	x1MaxMKS = 0.015495       
+	x2MinMKS = 0.0005+step_height           //  
+	x2MaxMKS = 0.0005+plasma_gap+step_height  
+	speciesName = neon 
+	density = 20.5e15
+	np2c = 1.2e5
+	temperature = 3.0e2     // try slightly hot ions to start. 
+}
+
+
+Diagnostic
+{
+	VarName = predef  number (t)
+	directory = data
+	file = ATM760-Ne_2mmPlasma_2mmStep_NarrowLoad_200V_D_001.dat
+	open = 0
+	append = 1
+	n_start=1999
+	n_step= 2000
+}
+								
+}
