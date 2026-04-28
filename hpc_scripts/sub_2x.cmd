@@ -11,6 +11,7 @@
 #SBATCH --error=slurm-%j.err
 #SBATCH --chdir=/mnt/scratch/be/test
 #SBATCH --partition=debug
+#SBATCH --exclusive
 #SBATCH --nodes=1
 #SBATCH --ntasks=40
 #SBATCH --ntasks-per-socket=20
