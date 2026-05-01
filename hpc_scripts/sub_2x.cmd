@@ -16,6 +16,7 @@
 #SBATCH --ntasks=40
 #SBATCH --ntasks-per-socket=20
 #SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=4800M
 #SBATCH --time=0:05:00
 
 
